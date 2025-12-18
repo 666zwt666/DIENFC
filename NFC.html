@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡皮巴拉の好运骰子 🦫</title>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@500;700&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Noto Sans SC', sans-serif; 
+            background: linear-gradient(135deg, #f9e8c8 0%, #e8c898 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .container { 
+            text-align: center; 
+            background: #fff9e8;
+            padding: 50px 40px; 
+            border-radius: 30px; 
+            box-shadow: 0 15px 30px rgba(163, 122, 68, 0.2);
+            border: 2px solid #d4b483;
+            position: relative;
+            max-width: 400px;
+            width: 90%;
+        }
+        .container.hidden-style::before {
+            content: "🦫✨";
+            font-size: 50px;
+            position: absolute;
+            top: -25px;
+            right: 25px;
+            transform: rotate(20deg);
+            animation: shake 1s infinite alternate;
+        }
+        @keyframes shake {
+            0% { transform: rotate(20deg) scale(1); }
+            100% { transform: rotate(25deg) scale(1.1); }
+        }
+        h1 {
+            font-family: 'Ma Shan Zheng', cursive;
+            color: #8b5a2b;
+            font-size: 36px;
+            margin: 0 0 20px 0;
+            text-shadow: 2px 2px 3px rgba(0,0,0,0.1);
+        }
+        #diceResult { 
+            font-family: 'ZCOOL KuaiLe', cursive;
+            font-size: 100px; 
+            font-weight: bold; 
+            color: #a0522d;
+            margin: 20px 0; 
+            text-shadow: 3px 3px 5px rgba(139, 90, 43, 0.3);
+            transition: transform 0.3s ease;
+        }
+        #diceResult.hidden-result {
+            color: #ffd700;
+            text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700, 3px 3px 5px rgba(139, 90, 43, 0.3);
+        }
+        #diceResult:hover {
+            transform: scale(1.1);
+        }
+        #blessingText { 
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 22px; 
+            color: #5c4033;
+            margin: 20px 0; 
+            min-height: 60px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            line-height: 1.5;
+            padding: 0 10px;
+            font-weight: 500;
+        }
+        #blessingText.hidden-text {
+            color: #d4af37;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
+        }
+        button { 
+            background: linear-gradient(90deg, #d4b483 0%, #c19a6b 100%);
+            color: white; 
+            border: none; 
+            padding: 18px 40px; 
+            border-radius: 50px; 
+            font-size: 20px; 
+            cursor: pointer; 
+            margin-top: 20px; 
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(163, 122, 68, 0.3);
+        }
+        button:hover { 
+            background: linear-gradient(90deg, #c19a6b 0%, #a67c52 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(163, 122, 68, 0.4);
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="mainContainer">
+        <h1>卡皮巴拉送好运啦</h1>
+        <div id="diceResult">?</div>
+        <div id="blessingText">点击按钮，解锁水豚の专属祝福～</div>
+        <button onclick="rollDice()">再摇一次 🎲</button>
+    </div>
+
+    <script>
+        // 优化后：去掉生硬数字关联词，只保留治愈主题，语气更自然
+        const baseBlessings = {
+            // 数字1 → 学业/事业：踏实前行
+            1: [
+                "🦫 不用急着赶路，专注做好当下的事，每一份努力都不会被辜负～",
+                "🦫 一步一个脚印走，慢慢来的速度，反而更稳当呀～",
+                "🦫 认真的你，值得所有如期而至的美好和收获～"
+            ],
+            // 数字2 → 情感/人际：被爱包围
+            2: [
+                "🦫 有人懂你的温柔，也有人分享你的小欢喜，这样的日子就很好～",
+                "🦫 真心相待的关系，总能治愈生活里的所有疲惫～",
+                "🦫 你值得被好好爱着，也值得所有双向奔赴的温暖～"
+            ],
+            // 数字3 → 财运：小富即安
+            3: [
+                "🦫 收支安稳，够用就好，小财小福常相伴，日子不慌不忙～",
+                "🦫 不用追求大富大贵，能满足日常的小期待，就是最好的财运～",
+                "🦫 好好生活，钱会慢慢有，快乐要一直揣在兜里～"
+            ],
+            // 数字4 → 健康：平安度日
+            4: [
+                "🦫 吃得香、睡得稳，身体无病痛，心里无烦恼，这就是最好的状态～",
+                "🦫 像水豚泡温泉一样放松身心，好好照顾自己，比什么都重要～",
+                "🦫 健康不是小事，但也不用焦虑，慢慢来，好好爱自己～"
+            ],
+            // 数字5 → 快乐：接纳自己
+            5: [
+                "🦫 开心时大笑，难过时也允许自己歇歇，接纳所有情绪的你，超可爱～",
+                "🦫 不用逼自己一直快乐，平凡日子里的小美好，就值得珍惜～",
+                "🦫 做不完美的自己就好呀，你本来就很值得被喜欢～"
+            ],
+            // 数字6 → 顺遂：从容向前
+            6: [
+                "🦫 所求皆如愿，所行皆坦途，哪怕有小波折，也能从容化解～",
+                "🦫 不是事事完美，而是遇到不顺时，也有继续往前走的勇气～",
+                "🦫 日子慢慢走，好事总会发生在慢慢来的你身上～"
+            ]
+        };
+
+        // 隐藏款祝福：保持稀有感+温柔语气
+        const hiddenBlessings = [
+            "✨隐藏款触发！🦫 愿你接下来的日子，既有意料之中的美好，也有意料之外的惊喜～",
+            "✨欧气爆棚！🦫 解锁卡皮巴拉专属祝福：你值得所有的好运和温柔，只管往前走～",
+            "✨天选水豚！🦫 隐藏款彩蛋掉落：慢慢来，一切都会朝着你想要的方向发展～",
+            "✨稀有buff！🦫 偷偷告诉你：你本身就自带好运，只是偶尔忘了而已～"
+        ];
+
+        // 隐藏款触发概率（10%）
+        const hiddenProbability = 0.1;
+
+        function getRandomItem(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+
+        function rollDice() {
+            // 重置样式
+            const container = document.getElementById('mainContainer');
+            const resultDiv = document.getElementById('diceResult');
+            const blessingDiv = document.getElementById('blessingText');
+            container.classList.remove('hidden-style');
+            resultDiv.classList.remove('hidden-result');
+            blessingDiv.classList.remove('hidden-text');
+            
+            // 骰子滚动动画
+            let rollCount = 0;
+            const rollInterval = setInterval(() => {
+                const randomNum = Math.floor(Math.random() * 6) + 1;
+                resultDiv.textContent = randomNum;
+                rollCount++;
+
+                if (rollCount >= 12) {
+                    clearInterval(rollInterval);
+                    
+                    // 判断是否触发隐藏款
+                    const isHidden = Math.random() < hiddenProbability;
+                    if (isHidden) {
+                        // 隐藏款效果
+                        resultDiv.textContent = "🦫";
+                        resultDiv.classList.add('hidden-result');
+                        blessingDiv.textContent = getRandomItem(hiddenBlessings);
+                        blessingDiv.classList.add('hidden-text');
+                        container.classList.add('hidden-style');
+                    } else {
+                        // 普通款：随机数字+自然祝福语
+                        const finalNum = Math.floor(Math.random() * 6) + 1;
+                        resultDiv.textContent = finalNum;
+                        blessingDiv.textContent = getRandomItem(baseBlessings[finalNum]);
+                    }
+                }
+            }, 80);
+        }
+
+        // 页面加载自动摇骰子
+        window.onload = rollDice;
+    </script>
+</body>
+</html>
